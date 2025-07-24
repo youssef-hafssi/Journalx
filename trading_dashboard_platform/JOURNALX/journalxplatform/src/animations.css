@@ -1,0 +1,103 @@
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes floating-slow {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 1s ease forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease forwards;
+}
+
+.animate-floating {
+  animation: floating 4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: floating 4s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floating-slow 6s ease-in-out infinite;
+}
+
+/* Ensure all responsive elements behave properly */
+@media (max-width: 768px) {
+  .carousel-item {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1023px) {
+  .carousel-item {
+    width: 50%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-item {
+    width: 33.333%;
+  }
+}

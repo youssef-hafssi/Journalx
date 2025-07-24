@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import custom animations */
+@import './animations.css';
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+
+@layer utilities {
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+    opacity: 0;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out forwards;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 1s ease-out forwards;
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@layer base {
+  :root {
+    --background: 240 10% 97.5%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 0 0% 0%; /* Black primary color */
+    --primary-foreground: 0 0% 100%; /* White text on black */
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 0 0% 0%; /* Black ring color */
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+  }
+
+  .dark {
+    --background: 0 0% 10%; /* Grey background #1a1a1a */
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 10%; /* Grey card #1a1a1a */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 5%; /* Grey popover */
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 100%; /* White primary in dark mode */
+    --primary-foreground: 0 0% 0%; /* Black text on white */
+
+    --secondary: 0 0% 14%; /* Grey secondary */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 14%; /* Grey muted */
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 0 0% 14%; /* Grey accent */
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 17%; /* Grey border */
+    --input: 0 0% 17%; /* Grey input */
+    --ring: 0 0% 100%; /* White ring in dark mode */
+
+    --sidebar-background: 0 0% 10%; /* Grey sidebar */
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 17%; /* Grey sidebar border */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Adding a subtle gradient for the glassmorphism effect to be more visible */
+    background-image: radial-gradient(circle at 1% 1%, rgba(128, 128, 128, 0.05), transparent 25%),
+      radial-gradient(circle at 99% 99%, rgba(128, 128, 128, 0.05), transparent 25%);
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .grainy {
+    position: relative;
+  }
+  .grainy::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 0;
+  }
+}

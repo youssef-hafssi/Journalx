@@ -1,0 +1,50 @@
+/* Chart glowing effects */
+.recharts-line-curve {
+  filter: drop-shadow(0 0 6px var(--line-glow-color));
+}
+
+.glow-profit {
+  --line-glow-color: rgba(0, 255, 128, 0.6);
+}
+
+.glow-loss {
+  --line-glow-color: rgba(255, 0, 128, 0.6);
+}
+
+.glow-neutral {
+  --line-glow-color: rgba(0, 255, 255, 0.6);
+}
+
+.dark .glow-profit {
+  --line-glow-color: rgba(0, 255, 128, 0.8);
+}
+
+.dark .glow-loss {
+  --line-glow-color: rgba(255, 0, 128, 0.8);
+}
+
+.dark .glow-neutral {
+  --line-glow-color: rgba(0, 255, 255, 0.8);
+}
+
+/* Enhance dots with a subtle glow */
+.recharts-dot {
+  filter: drop-shadow(0 0 3px var(--line-glow-color));
+}
+
+/* Add a pulsing effect for active dots */
+@keyframes pulse {
+  0% {
+    filter: drop-shadow(0 0 3px var(--line-glow-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px var(--line-glow-color));
+  }
+  100% {
+    filter: drop-shadow(0 0 3px var(--line-glow-color));
+  }
+}
+
+.recharts-active-dot {
+  animation: pulse 1.5s infinite;
+}

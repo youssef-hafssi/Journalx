@@ -1,0 +1,65 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#334155;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#334155" stroke-width="1" opacity="0.3"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  
+  <!-- Chart background -->
+  <rect x="80" y="180" width="500" height="300" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  
+  <!-- Chart lines -->
+  <polyline points="100,450 150,420 200,380 250,360 300,340 350,320 400,300 450,280 500,260 550,240" 
+            fill="none" stroke="url(#accentGradient)" stroke-width="3"/>
+  <polyline points="100,460 150,440 200,400 250,390 300,370 350,350 400,330 450,310 500,290 550,270" 
+            fill="none" stroke="#10b981" stroke-width="2" opacity="0.7"/>
+  
+  <!-- Chart dots -->
+  <circle cx="200" cy="380" r="4" fill="#3b82f6"/>
+  <circle cx="300" cy="340" r="4" fill="#3b82f6"/>
+  <circle cx="400" cy="300" r="4" fill="#3b82f6"/>
+  <circle cx="500" cy="260" r="4" fill="#3b82f6"/>
+  
+  <!-- Logo/Brand area -->
+  <rect x="650" y="150" width="450" height="330" rx="16" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  
+  <!-- JournalX Logo -->
+  <text x="875" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#accentGradient)">JournalX</text>
+  
+  <!-- Tagline -->
+  <text x="875" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#94a3b8">Professional Trading Journal Platform</text>
+  
+  <!-- Features -->
+  <text x="680" y="320" font-family="Arial, sans-serif" font-size="16" fill="#e2e8f0">✓ Track Trading Performance</text>
+  <text x="680" y="350" font-family="Arial, sans-serif" font-size="16" fill="#e2e8f0">✓ Advanced Analytics</text>
+  <text x="680" y="380" font-family="Arial, sans-serif" font-size="16" fill="#e2e8f0">✓ Detailed Trade Insights</text>
+  <text x="680" y="410" font-family="Arial, sans-serif" font-size="16" fill="#e2e8f0">✓ Performance Optimization</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="950" cy="350" r="60" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.3"/>
+  <circle cx="950" cy="350" r="40" fill="none" stroke="#8b5cf6" stroke-width="2" opacity="0.5"/>
+  <circle cx="950" cy="350" r="20" fill="#3b82f6" opacity="0.7"/>
+  
+  <!-- Trading icons -->
+  <rect x="120" y="200" width="30" height="20" rx="4" fill="#10b981" opacity="0.8"/>
+  <rect x="160" y="210" width="30" height="20" rx="4" fill="#ef4444" opacity="0.8"/>
+  <rect x="200" y="195" width="30" height="20" rx="4" fill="#10b981" opacity="0.8"/>
+  <rect x="240" y="205" width="30" height="20" rx="4" fill="#10b981" opacity="0.8"/>
+</svg>
