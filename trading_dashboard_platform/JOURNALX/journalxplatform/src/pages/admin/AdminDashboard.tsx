@@ -6,17 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Users, 
-  TrendingUp, 
-  DollarSign, 
+import {
+  Users,
+  TrendingUp,
+  DollarSign,
   Activity,
   ArrowUpRight,
   ArrowDownRight,
   Calendar,
   BarChart3,
   UserPlus,
-  Loader2
+  Loader2,
+  Bell
 } from 'lucide-react';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 import OnlineUsers from '@/components/admin/OnlineUsers';
@@ -318,7 +319,7 @@ export default function AdminDashboard() {
       </Tabs>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <Link to="/admin/users">
             <CardHeader className="flex flex-row items-center space-y-0 pb-2">
@@ -342,6 +343,20 @@ export default function AdminDashboard() {
             <CardContent>
               <p className="text-xs text-muted-foreground">
                 Analyze trading activity and performance
+              </p>
+            </CardContent>
+          </Link>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <Link to="/admin/notifications">
+            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Send Notifications</CardTitle>
+              <Bell className="h-4 w-4 ml-auto text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                Send popup messages to users
               </p>
             </CardContent>
           </Link>

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { journalService } from '@/lib/journal';
+import { AdminService } from '@/lib/admin';
 import { type JournalEntry } from '@/types/journal';
 import { toast } from 'sonner';
 
@@ -8,26 +11,28 @@ import { toast } from 'sonner';
 const TRADE_DELETED_EVENT = 'tradeDeleted';
 
 export function useJournalEntries() {
+  const { userId } = useParams<{ userId: string }>();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
-  // Load journal entries when user is authenticated
+  // Load journal entries when user is authenticated or when impersonating
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && (user || (isImpersonating && userId))) {
       loadEntries();
     } else {
       setEntries([]);
       setIsLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isImpersonating, userId]);
 
   // Listen for trade deletion events to refresh journal entries
   useEffect(() => {
     const handleTradeDeleted = (event: CustomEvent) => {
       console.log('🔄 Trade deleted event received, refreshing journal entries...', event.detail);
       // Refresh journal entries since linked entries may have been deleted
-      if (isAuthenticated && user) {
+      if (isAuthenticated && (user || (isImpersonating && userId))) {
         loadEntries();
       }
     };
@@ -43,7 +48,18 @@ export function useJournalEntries() {
     try {
       setIsLoading(true);
       setError(null);
-      const fetchedEntries = await journalService.getJournalEntries();
+
+      let fetchedEntries: JournalEntry[];
+
+      // If impersonating, load the impersonated user's journal entries
+      if (isImpersonating && userId) {
+        console.log('🎭 Loading journal entries for impersonated user:', userId);
+        fetchedEntries = await AdminService.getUserJournalEntries(userId);
+      } else {
+        // Load current user's journal entries
+        fetchedEntries = await journalService.getJournalEntries();
+      }
+
       setEntries(fetchedEntries);
     } catch (err) {
       console.error('Error loading journal entries:', err);
@@ -57,6 +73,12 @@ export function useJournalEntries() {
   const addEntry = async (entryData: Omit<JournalEntry, 'id' | 'date'>) => {
     console.log('🎯 useJournalEntries addEntry called with:', entryData);
     try {
+      // Prevent adding journal entries when impersonating
+      if (isImpersonating) {
+        toast.error('Cannot add journal entries while impersonating a user');
+        throw new Error('Cannot add journal entries while impersonating');
+      }
+
       console.log('📞 Calling journalService.addJournalEntry...');
       const newEntry = await journalService.addJournalEntry(entryData);
       console.log('📥 journalService.addJournalEntry returned:', newEntry);

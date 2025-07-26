@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { tradesService } from '@/lib/trades';
+import { AdminService } from '@/lib/admin';
 import { type Trade } from '@/components/dashboard/RecentTrades';
 import { toast } from 'sonner';
 
@@ -8,26 +11,39 @@ import { toast } from 'sonner';
 const TRADE_DELETED_EVENT = 'tradeDeleted';
 
 export function useTrades() {
+  const { userId } = useParams<{ userId: string }>();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
 
-  // Load trades when user is authenticated
+  // Load trades when user is authenticated or when impersonating
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && (user || (isImpersonating && userId))) {
       loadTrades();
     } else {
       setTrades([]);
       setIsLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isImpersonating, userId]);
 
   const loadTrades = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const fetchedTrades = await tradesService.getTrades();
+
+      let fetchedTrades: Trade[];
+
+      // If impersonating, load the impersonated user's trades
+      if (isImpersonating && userId) {
+        console.log('🎭 Loading trades for impersonated user:', userId);
+        fetchedTrades = await AdminService.getUserTrades(userId);
+      } else {
+        // Load current user's trades
+        fetchedTrades = await tradesService.getTrades();
+      }
+
       setTrades(fetchedTrades);
     } catch (err) {
       console.error('Error loading trades:', err);
@@ -39,6 +55,12 @@ export function useTrades() {
   };
   const addTrade = async (tradeData: Omit<Trade, 'id'>) => {
     try {
+      // Prevent adding trades when impersonating
+      if (isImpersonating) {
+        toast.error('Cannot add trades while impersonating a user');
+        throw new Error('Cannot add trades while impersonating');
+      }
+
       console.log('useTrades addTrade called with:', tradeData);
       const newTrade = await tradesService.addTrade(tradeData);
       if (newTrade) {
@@ -58,10 +80,16 @@ export function useTrades() {
 
   const updateTrade = async (tradeId: string, updates: Partial<Trade>) => {
     try {
+      // Prevent updating trades when impersonating
+      if (isImpersonating) {
+        toast.error('Cannot update trades while impersonating a user');
+        throw new Error('Cannot update trades while impersonating');
+      }
+
       const updatedTrade = await tradesService.updateTrade(tradeId, updates);
       if (updatedTrade) {
-        setTrades(prev => 
-          prev.map(trade => 
+        setTrades(prev =>
+          prev.map(trade =>
             trade.id === tradeId ? updatedTrade : trade
           )
         );
@@ -75,15 +103,21 @@ export function useTrades() {
     }
   };  const deleteTrade = async (tradeId: string) => {
     try {
+      // Prevent deleting trades when impersonating
+      if (isImpersonating) {
+        toast.error('Cannot delete trades while impersonating a user');
+        throw new Error('Cannot delete trades while impersonating');
+      }
+
       const success = await tradesService.deleteTrade(tradeId);
       if (success) {
         setTrades(prev => prev.filter(trade => trade.id !== tradeId));
-        
+
         // Dispatch custom event to notify other components (like journal) that a trade was deleted
-        window.dispatchEvent(new CustomEvent(TRADE_DELETED_EVENT, { 
-          detail: { tradeId } 
+        window.dispatchEvent(new CustomEvent(TRADE_DELETED_EVENT, {
+          detail: { tradeId }
         }));
-        
+
         toast.success('Trade and linked journal entries deleted successfully!');
         return true;
       }

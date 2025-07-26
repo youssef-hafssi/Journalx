@@ -133,3 +133,42 @@ export interface AdminRole {
   granted_by: string;
   granted_at: string;
 }
+
+// Notification types
+export interface AdminNotification {
+  id: string;
+  admin_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'error' | 'announcement';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  target_type: 'all' | 'specific' | 'role';
+  target_users?: string[];
+  target_roles?: string[];
+  expires_at?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserNotification {
+  id: string;
+  notification_id: string;
+  user_id: string;
+  is_read: boolean;
+  is_dismissed: boolean;
+  read_at?: string;
+  dismissed_at?: string;
+  delivered_at: string;
+  created_at: string;
+  notification?: AdminNotification;
+}
+
+export interface NotificationAnalytics {
+  total_delivered: number;
+  total_read: number;
+  total_dismissed: number;
+  total_pending: number;
+  read_rate: number;
+  dismiss_rate: number;
+}

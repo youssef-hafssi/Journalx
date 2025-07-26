@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { initializeAnalytics, trackPageView } from "@/lib/analytics";
 import Index from "./pages/Index";
@@ -25,7 +27,9 @@ import NewsData from "./pages/NewsData";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTrades from "./pages/admin/AdminTrades";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 import { AdminRoute } from "./components/admin/AdminRoute";
+import { ImpersonatedRoute } from "./components/admin/ImpersonatedRoute";
 import { useTrades } from "@/hooks/use-trades";
 
 const queryClient = new QueryClient();
@@ -72,6 +76,19 @@ const AppRoutes = () => {
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
       <Route path="/admin/trades" element={<AdminRoute><AdminTrades /></AdminRoute>} />
+      <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+
+      {/* Admin Impersonation Routes */}
+      <Route element={<AdminRoute><ImpersonatedRoute><Layout /></ImpersonatedRoute></AdminRoute>}>
+        <Route path="/admin/impersonate/:userId/dashboard" element={<Dashboard />} />
+        <Route path="/admin/impersonate/:userId/trades" element={<AllTrades />} />
+        <Route path="/admin/impersonate/:userId/calendar" element={<CalendarPage trades={trades} />} />
+        <Route path="/admin/impersonate/:userId/statistical-edge" element={<StatisticalEdge trades={trades} />} />
+        <Route path="/admin/impersonate/:userId/journal" element={<JournalPage trades={trades} />} />
+        <Route path="/admin/impersonate/:userId/edge-builder" element={<EdgeBuilder trades={trades} />} />
+        <Route path="/admin/impersonate/:userId/forex-tradable-assets" element={<ForexTradableAssetsPage />} />
+        <Route path="/admin/impersonate/:userId/news-data" element={<NewsData trades={trades} />} />
+      </Route>
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
@@ -90,14 +107,18 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AnalyticsTracker />
-              <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
+          <ImpersonationProvider>
+            <NotificationProvider>
+              <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AnalyticsTracker />
+                <AppRoutes />
+              </BrowserRouter>
+              </TooltipProvider>
+            </NotificationProvider>
+          </ImpersonationProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

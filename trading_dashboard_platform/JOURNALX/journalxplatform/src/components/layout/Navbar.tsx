@@ -21,6 +21,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminService } from "@/lib/admin";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { useImpersonation } from "@/contexts/ImpersonationContext";
+import { useParams } from "react-router-dom";
 import * as React from "react";
 
 const navLinks = [
@@ -35,9 +38,20 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  console.log('🔍 Navbar component rendering...');
   const { pathname } = useLocation();
   const [open, setOpen] = React.useState(false);
   const { user, logout } = useAuth();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+  const { userId } = useParams<{ userId: string }>();
+
+  console.log('🔍 Navbar state:', {
+    pathname,
+    userId,
+    isImpersonating,
+    impersonatedUser: impersonatedUser?.email,
+    user: user?.email
+  });
   const [isAdmin, setIsAdmin] = React.useState(false);
 
   // Check admin status
@@ -61,6 +75,32 @@ export function Navbar() {
     }
   }, [user]);
 
+  // Generate navigation links based on impersonation status
+  const getNavLinks = () => {
+    if (isImpersonating && userId) {
+      // When impersonating, use impersonation routes
+      return navLinks.map(link => ({
+        ...link,
+        href: `/admin/impersonate/${userId}${link.href}`
+      }));
+    }
+    // Regular user navigation
+    return navLinks;
+  };
+
+  const currentNavLinks = getNavLinks();
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Navbar Debug:', {
+      isImpersonating,
+      userId,
+      impersonatedUser,
+      currentNavLinks: currentNavLinks.map(link => ({ href: link.href, label: link.label })),
+      pathname
+    });
+  }, [isImpersonating, userId, impersonatedUser, currentNavLinks, pathname]);
+
   const handleLogout = () => {
     logout();
   };
@@ -75,9 +115,12 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
-          <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <Link
+            to={isImpersonating && userId ? `/admin/impersonate/${userId}/dashboard` : "/dashboard"}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
             <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
               <BookOpenCheck className="h-5 w-5 text-black dark:text-white" />
             </div>
@@ -91,8 +134,8 @@ export function Navbar() {
             </div>
           </Link>
           
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => {
+          <nav className="hidden sm:flex items-center gap-1">
+            {currentNavLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
               return (
@@ -101,13 +144,13 @@ export function Navbar() {
                   to={link.href}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-muted/50",
-                    isActive 
-                      ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white shadow-sm" 
+                    isActive
+                      ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  <span className="hidden xl:inline">{link.label}</span>
+                  <span className="hidden lg:inline">{link.label}</span>
                 </Link>
               );
             })}
@@ -116,7 +159,10 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          
+
+          {/* Notifications */}
+          <NotificationCenter />
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -157,7 +203,7 @@ export function Navbar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="lg:hidden">
+          <div className="sm:hidden">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="hover:bg-muted/50">
@@ -167,9 +213,9 @@ export function Navbar() {
               </SheetTrigger>
             <SheetContent side="left" className="w-80">
               <div className="flex flex-col gap-6 py-4">
-                <Link 
-                  to="/dashboard" 
-                  className="flex items-center gap-3 font-bold text-lg" 
+                <Link
+                  to={isImpersonating && userId ? `/admin/impersonate/${userId}/dashboard` : "/dashboard"}
+                  className="flex items-center gap-3 font-bold text-lg"
                   onClick={() => setOpen(false)}
                 >
                   <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
@@ -182,7 +228,7 @@ export function Navbar() {
                 </Link>
                 
                 <nav className="flex flex-col gap-2">
-                  {navLinks.map((link) => {
+                  {currentNavLinks.map((link) => {
                     const Icon = link.icon;
                     const isActive = pathname === link.href;
                     return (

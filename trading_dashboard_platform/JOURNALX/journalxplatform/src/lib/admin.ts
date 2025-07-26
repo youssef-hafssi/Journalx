@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { AdminUser, AdminTrade, AdminStats, AdminFilters } from '@/types/admin';
+import { supabaseToTrade } from './trades';
 
 export class AdminService {
   // Check if current user is admin
@@ -891,6 +892,80 @@ GRANT EXECUTE ON FUNCTION get_all_users_for_admin() TO authenticated;
       return true;
     } catch (error) {
       console.error('Error granting admin role:', error);
+      throw error;
+    }
+  }
+
+  // Get user trades for impersonation
+  static async getUserTrades(userId: string): Promise<any[]> {
+    try {
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      const { data, error } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Convert raw Supabase data to Trade format with proper date handling
+      return (data || []).map(supabaseToTrade);
+    } catch (error) {
+      console.error('Error fetching user trades:', error);
+      throw error;
+    }
+  }
+
+  // Get user profile for impersonation
+  static async getUserProfile(userId: string): Promise<any> {
+    try {
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      throw error;
+    }
+  }
+
+  // Get user journal entries for impersonation
+  static async getUserJournalEntries(userId: string): Promise<any[]> {
+    try {
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      console.log('🎭 Fetching journal entries for user:', userId);
+
+      const { data, error } = await supabase
+        .rpc('get_user_journal_entries_for_admin', {
+          target_user_id: userId
+        });
+
+      if (error) {
+        console.error('Error calling get_user_journal_entries_for_admin:', error);
+        throw error;
+      }
+
+      console.log('✅ Journal entries fetched for user:', userId, 'count:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching user journal entries:', error);
       throw error;
     }
   }

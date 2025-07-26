@@ -23,10 +23,16 @@ const Dashboard = () => {
   // Filter trades based on date range
   const filteredTrades = useMemo(() => {
     if (!dateRange.from && !dateRange.to) return trades;
-    
+
     return trades.filter(trade => {
+      // Skip trades with invalid or missing dates
+      if (!trade.date) return false;
+
       const tradeDate = new Date(trade.date);
-      
+
+      // Skip trades with invalid dates
+      if (isNaN(tradeDate.getTime())) return false;
+
       if (dateRange.from && dateRange.to) {
         return (isAfter(tradeDate, dateRange.from) || isEqual(tradeDate, dateRange.from)) &&
                (isBefore(tradeDate, dateRange.to) || isEqual(tradeDate, dateRange.to));
@@ -35,7 +41,7 @@ const Dashboard = () => {
       } else if (dateRange.to) {
         return isBefore(tradeDate, dateRange.to) || isEqual(tradeDate, dateRange.to);
       }
-      
+
       return true;
     });
   }, [trades, dateRange]);
@@ -85,6 +91,9 @@ const Dashboard = () => {
     const avgWinLossRatio = Math.abs(avgLoss) > 0 ? avgWin / Math.abs(avgLoss) : (avgWin > 0 ? Infinity : 0);
 
     const tradesByDate = filteredTrades.reduce((acc, trade) => {
+      // Skip trades with invalid or missing dates
+      if (!trade.date) return acc;
+
       const groupDate = trade.date;
       if (!acc[groupDate]) acc[groupDate] = 0;
       acc[groupDate] += trade.pnl;
@@ -103,11 +112,19 @@ const Dashboard = () => {
     ).map(([name, pnl]) => ({ name, pnl }));
 
     const dailyPnlList = Object.entries(tradesByDate)
-      .map(([date, pnl]) => ({
-        name: format(new Date(date), "MM/dd/yy"),
-        pnl,
-        dateObj: new Date(date),
-      }))
+      .map(([date, pnl]) => {
+        const dateObj = new Date(date);
+        // Skip entries with invalid dates
+        if (isNaN(dateObj.getTime())) {
+          return null;
+        }
+        return {
+          name: format(dateObj, "MM/dd/yy"),
+          pnl,
+          dateObj,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
     const winningDays = Object.values(tradesByDate).filter((pnl) => pnl > 0).length;

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminService } from '@/lib/admin';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import type { AdminUser, AdminFilters } from '@/types/admin';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,16 +30,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { 
-  Users, 
-  Search, 
-  Download, 
+import {
+  Users,
+  Search,
+  Download,
   Filter,
   MoreHorizontal,
   Eye,
   Trash2,
   Loader2,
-  ArrowUpDown
+  ArrowUpDown,
+  UserCheck
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -51,6 +54,8 @@ import { formatCurrency, formatNumber } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
+  const { startImpersonation } = useImpersonation();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -120,6 +125,12 @@ export default function AdminUsers() {
       console.error('Error deleting user:', error);
       toast.error('Failed to delete user');
     }
+  };
+
+  const handleImpersonateUser = (user: AdminUser) => {
+    startImpersonation(user);
+    toast.success(`Now viewing as ${user.name} (${user.email})`);
+    navigate(`/admin/impersonate/${user.id}/dashboard`);
   };
 
   const getSortIcon = (field: string) => {
@@ -305,8 +316,12 @@ export default function AdminUsers() {
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleImpersonateUser(user)}>
+                              <UserCheck className="h-4 w-4 mr-2" />
+                              Impersonate User
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleDeleteUser(user.id)}
                               className="text-red-600"
                             >

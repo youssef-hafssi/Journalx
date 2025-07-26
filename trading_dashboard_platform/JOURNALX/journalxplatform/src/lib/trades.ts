@@ -86,18 +86,34 @@ function tradeToSupabase(trade: Trade, userId: string): SupabaseTrade {
 }
 
 // Convert Supabase format to Trade
-function supabaseToTrade(supabaseTrade: any): Trade {
+export function supabaseToTrade(supabaseTrade: any): Trade {
+  // Helper function to safely format date
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+    }
+
+    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+  };
+
+  const tradeDate = supabaseTrade.exit_date || supabaseTrade.entry_date || supabaseTrade.created_at;
+
   return {
     id: supabaseTrade.id,
-    date: supabaseTrade.exit_date
-      ? new Date(supabaseTrade.exit_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
-      : supabaseTrade.entry_date
-        ? new Date(supabaseTrade.entry_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
-        : new Date(supabaseTrade.created_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+    date: formatDate(tradeDate),
     symbol: supabaseTrade.symbol,
     pnl: supabaseTrade.pnl || 0,
-    entryDate: supabaseTrade.entry_date ? new Date(supabaseTrade.entry_date) : undefined,
-    exitDate: supabaseTrade.exit_date ? new Date(supabaseTrade.exit_date) : undefined,
+    entryDate: supabaseTrade.entry_date ? (() => {
+      const date = new Date(supabaseTrade.entry_date);
+      return isNaN(date.getTime()) ? undefined : date;
+    })() : undefined,
+    exitDate: supabaseTrade.exit_date ? (() => {
+      const date = new Date(supabaseTrade.exit_date);
+      return isNaN(date.getTime()) ? undefined : date;
+    })() : undefined,
     tradeType: supabaseTrade.trade_type || (supabaseTrade.side === 'buy' ? 'long' : 'short'),
     session: supabaseTrade.session,
     timeframe: supabaseTrade.timeframe,
