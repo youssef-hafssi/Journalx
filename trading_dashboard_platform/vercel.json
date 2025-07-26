@@ -1,0 +1,21 @@
+{
+  "builds": [
+    {
+      "src": "trading_dashboard_platform/JOURNALX/journalxplatform/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "trading_dashboard_platform/JOURNALX/journalxplatform/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/trading_dashboard_platform/JOURNALX/journalxplatform/dist/$1"
+    },
+    {
+      "src": "/.*",
+      "dest": "/trading_dashboard_platform/JOURNALX/journalxplatform/dist/index.html"
+    }
+  ]
+}
