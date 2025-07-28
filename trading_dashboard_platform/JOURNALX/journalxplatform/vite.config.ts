@@ -31,6 +31,18 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' &&
     componentTagger(),
+    // Custom plugin to handle client-side routing fallback
+    {
+      name: 'spa-fallback',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && !req.url.startsWith('/api') && !req.url.includes('.') && req.method === 'GET') {
+            req.url = '/';
+          }
+          next();
+        });
+      },
+    },
   ].filter(Boolean),
   resolve: {
     alias: {

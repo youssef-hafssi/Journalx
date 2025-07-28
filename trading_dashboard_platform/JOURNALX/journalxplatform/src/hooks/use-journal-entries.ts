@@ -54,9 +54,16 @@ export function useJournalEntries() {
       // If impersonating, load the impersonated user's journal entries
       if (isImpersonating && userId) {
         console.log('🎭 Loading journal entries for impersonated user:', userId);
-        fetchedEntries = await AdminService.getUserJournalEntries(userId);
+        try {
+          fetchedEntries = await AdminService.getUserJournalEntries(userId);
+          console.log('🎭 Successfully loaded journal entries:', fetchedEntries.length);
+        } catch (adminError) {
+          console.error('🎭 Error loading journal entries via AdminService:', adminError);
+          throw adminError;
+        }
       } else {
         // Load current user's journal entries
+        console.log('👤 Loading journal entries for current user');
         fetchedEntries = await journalService.getJournalEntries();
       }
 

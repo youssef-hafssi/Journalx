@@ -31,8 +31,40 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 import { AdminRoute } from "./components/admin/AdminRoute";
 import { ImpersonatedRoute } from "./components/admin/ImpersonatedRoute";
 import { useTrades } from "@/hooks/use-trades";
+import { useImpersonatedTrades } from "@/hooks/use-impersonated-trades";
+import { useImpersonation } from "@/contexts/ImpersonationContext";
 
 const queryClient = new QueryClient();
+
+// Wrapper components for impersonated pages that use the correct trades hook
+const ImpersonatedStatisticalEdge = () => {
+  const { trades } = useImpersonatedTrades();
+  return <StatisticalEdge trades={trades} />;
+};
+
+const ImpersonatedCalendarPage = () => {
+  const { trades } = useImpersonatedTrades();
+  return <CalendarPage trades={trades} />;
+};
+
+const ImpersonatedJournalPage = () => {
+  const { trades, isLoading, error, userId } = useImpersonatedTrades();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+  console.log('🎭 ImpersonatedJournalPage - userId:', userId, 'isImpersonating:', isImpersonating, 'impersonatedUser:', impersonatedUser, 'isLoading:', isLoading, 'error:', error, 'trades:', trades.length, trades);
+  return <JournalPage trades={trades} />;
+};
+
+const ImpersonatedEdgeBuilder = () => {
+  const { trades, isLoading, error, userId } = useImpersonatedTrades();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+  console.log('🎭 ImpersonatedEdgeBuilder - userId:', userId, 'isImpersonating:', isImpersonating, 'impersonatedUser:', impersonatedUser, 'isLoading:', isLoading, 'error:', error, 'trades:', trades.length, trades);
+  return <EdgeBuilder trades={trades} />;
+};
+
+const ImpersonatedNewsData = () => {
+  const { trades } = useImpersonatedTrades();
+  return <NewsData trades={trades} />;
+};
 
 // Analytics tracker component
 const AnalyticsTracker = () => {
@@ -44,6 +76,8 @@ const AnalyticsTracker = () => {
 
   return null;
 };
+
+
 
 // App routes component that uses the trades hook
 const AppRoutes = () => {
@@ -82,12 +116,12 @@ const AppRoutes = () => {
       <Route element={<AdminRoute><ImpersonatedRoute><Layout /></ImpersonatedRoute></AdminRoute>}>
         <Route path="/admin/impersonate/:userId/dashboard" element={<Dashboard />} />
         <Route path="/admin/impersonate/:userId/trades" element={<AllTrades />} />
-        <Route path="/admin/impersonate/:userId/calendar" element={<CalendarPage trades={trades} />} />
-        <Route path="/admin/impersonate/:userId/statistical-edge" element={<StatisticalEdge trades={trades} />} />
-        <Route path="/admin/impersonate/:userId/journal" element={<JournalPage trades={trades} />} />
-        <Route path="/admin/impersonate/:userId/edge-builder" element={<EdgeBuilder trades={trades} />} />
+        <Route path="/admin/impersonate/:userId/calendar" element={<ImpersonatedCalendarPage />} />
+        <Route path="/admin/impersonate/:userId/statistical-edge" element={<ImpersonatedStatisticalEdge />} />
+        <Route path="/admin/impersonate/:userId/journal" element={<ImpersonatedJournalPage />} />
+        <Route path="/admin/impersonate/:userId/edge-builder" element={<ImpersonatedEdgeBuilder />} />
         <Route path="/admin/impersonate/:userId/forex-tradable-assets" element={<ForexTradableAssetsPage />} />
-        <Route path="/admin/impersonate/:userId/news-data" element={<NewsData trades={trades} />} />
+        <Route path="/admin/impersonate/:userId/news-data" element={<ImpersonatedNewsData />} />
       </Route>
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

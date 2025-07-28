@@ -44,7 +44,11 @@ const EdgeBuilder = ({ trades = [] }: EdgeBuilderProps) => {
   const [selectedModel, setSelectedModel] = useState<string>('');
   const { theme } = useTheme();
 
+  console.log('🏗️ EdgeBuilder received trades:', trades.length, trades);
+
   const models = [...new Set(trades.map(trade => trade.entryModel).filter(Boolean) as string[])];
+  console.log('🏗️ EdgeBuilder models found:', models);
+
   if (models.length > 0 && !selectedModel) {
     setSelectedModel(models[0]);
   }

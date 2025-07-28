@@ -35,6 +35,7 @@ interface JournalPageProps {
 
 const JournalPage = ({ trades }: JournalPageProps) => {
   const { entries, addEntry, updateEntry, deleteEntry } = useJournalEntries();
+  console.log('📝 JournalPage received trades:', trades.length, 'entries:', entries.length);
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [selectedEntry, setSelectedEntry] = React.useState<JournalEntry | null>(null);
