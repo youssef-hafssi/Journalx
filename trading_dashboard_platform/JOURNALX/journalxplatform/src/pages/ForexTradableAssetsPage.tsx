@@ -1,110 +1,385 @@
-import { useTheme } from '@/contexts/ThemeContext';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TrendingUp, TrendingDown, Minus, BarChart3 } from "lucide-react";
+
+type MarketCondition = 'bullish' | 'bearish' | 'consolidation';
+
+interface CurrencyConditions {
+  EUR: MarketCondition | null;
+  GBP: MarketCondition | null;
+  JPY: MarketCondition | null;
+  CAD: MarketCondition | null;
+  CHF: MarketCondition | null;
+  NZD: MarketCondition | null;
+  AUD: MarketCondition | null;
+  DXY: MarketCondition | null;
+}
+
+interface PairAnalysis {
+  pair: string;
+  base: string;
+  quote: string;
+  tradable: boolean;
+  direction?: 'bullish' | 'bearish';
+  baseCondition: MarketCondition;
+  quoteCondition: MarketCondition;
+}
 
 const ForexTradableAssetsPage = () => {
-  const { theme } = useTheme();
+  const [currencyConditions, setCurrencyConditions] = useState<CurrencyConditions>({
+    EUR: null,
+    GBP: null,
+    JPY: null,
+    CAD: null,
+    CHF: null,
+    NZD: null,
+    AUD: null,
+    DXY: null,
+  });
+
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
+
+  const currencies = ['EUR', 'GBP', 'JPY', 'CAD', 'CHF', 'NZD', 'AUD', 'DXY'];
+
+  const forexPairs = [
+    // Major pairs
+    'EURUSD', 'GBPUSD', 'USDJPY', 'USDCAD', 'USDCHF', 'AUDUSD', 'NZDUSD',
+    // Cross pairs
+    'EURGBP', 'EURJPY', 'EURCAD', 'EURCHF', 'EURAUD', 'EURNZD',
+    'GBPJPY', 'GBPCAD', 'GBPCHF', 'GBPAUD', 'GBPNZD',
+    'JPYCHF', 'JPYCAD', 'JPYAUD', 'JPYNZD',
+    'CADCHF', 'CADAUD', 'CADNZD',
+    'CHFAUD', 'CHFNZD',
+    'AUDNZD'
+  ];
+
+  const updateCurrencyCondition = (currency: keyof CurrencyConditions, condition: MarketCondition | null) => {
+    setCurrencyConditions(prev => ({
+      ...prev,
+      [currency]: condition
+    }));
+  };
+
+  const analyzePairs = useMemo((): PairAnalysis[] => {
+    return forexPairs.map(pair => {
+      let base: string, quote: string;
+
+      if (pair.includes('USD')) {
+        if (pair.startsWith('USD')) {
+          base = 'DXY';
+          quote = pair.slice(3);
+        } else {
+          base = pair.slice(0, 3);
+          quote = 'DXY';
+        }
+      } else {
+        base = pair.slice(0, 3);
+        quote = pair.slice(3);
+      }
+
+      const baseCondition = currencyConditions[base as keyof CurrencyConditions];
+      const quoteCondition = currencyConditions[quote as keyof CurrencyConditions];
+
+      // Skip pairs where either currency condition is not selected
+      if (!baseCondition || !quoteCondition) {
+        return {
+          pair,
+          base,
+          quote,
+          tradable: false,
+          direction: undefined,
+          baseCondition,
+          quoteCondition
+        };
+      }
+
+      // Determine if tradable
+      const isTradable = (
+        (baseCondition === 'bullish' && quoteCondition === 'bearish') ||
+        (baseCondition === 'bearish' && quoteCondition === 'bullish') ||
+        (baseCondition === 'bullish' && quoteCondition === 'consolidation') ||
+        (baseCondition === 'bearish' && quoteCondition === 'consolidation') ||
+        (baseCondition === 'consolidation' && quoteCondition === 'bullish') ||
+        (baseCondition === 'consolidation' && quoteCondition === 'bearish')
+      );
+
+      // Determine direction if tradable
+      let direction: 'bullish' | 'bearish' | undefined;
+      if (isTradable) {
+        if (baseCondition === 'bullish' && (quoteCondition === 'bearish' || quoteCondition === 'consolidation')) {
+          direction = 'bullish';
+        } else if (baseCondition === 'bearish' && (quoteCondition === 'bullish' || quoteCondition === 'consolidation')) {
+          direction = 'bearish';
+        } else if (baseCondition === 'consolidation' && quoteCondition === 'bullish') {
+          direction = 'bearish';
+        } else if (baseCondition === 'consolidation' && quoteCondition === 'bearish') {
+          direction = 'bullish';
+        }
+      }
+
+      return {
+        pair,
+        base,
+        quote,
+        tradable: isTradable,
+        direction,
+        baseCondition,
+        quoteCondition
+      };
+    });
+  }, [currencyConditions]);
+
+  const tradablePairs = analyzePairs.filter(p => p.tradable);
+  const nonTradablePairs = analyzePairs.filter(p => !p.tradable);
+
+  const handleAnalyze = () => {
+    setHasAnalyzed(true);
+  };
+
+  const resetConditions = () => {
+    setCurrencyConditions({
+      EUR: 'consolidation',
+      GBP: 'consolidation',
+      JPY: 'consolidation',
+      CAD: 'consolidation',
+      CHF: 'consolidation',
+      NZD: 'consolidation',
+      AUD: 'consolidation',
+      DXY: 'consolidation',
+    });
+    setHasAnalyzed(false);
+  };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 ${theme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
-      <div className="max-w-2xl mx-auto text-center space-y-8">
-        {/* Icon */}
-        <div className="flex justify-center">
-          <div className="relative">
-            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl">
-              <Globe className="h-12 w-12 text-white" />
-            </div>
-            <div className="absolute -top-2 -right-2">
-              <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                <Clock className="h-4 w-4 text-yellow-800" />
-              </div>
-            </div>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-2">
+          <BarChart3 className="h-8 w-8 text-blue-500" />
+          <h1 className="text-3xl font-bold">JournalX Assets Analyzer</h1>
         </div>
+        <p className="text-muted-foreground">
+          Set market conditions for each currency to identify tradable and non-tradable pairs
+        </p>
+      </div>
 
-        {/* Main Content */}
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <Badge variant="secondary" className="mb-4 animate-pulse">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              Forex Assets
-            </Badge>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text">
-              Coming Soon
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              We're working hard to bring you advanced forex tradable assets analysis. Stay tuned!
-            </p>
+      {/* Currency Conditions */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Currency Market Conditions
+            </CardTitle>
+            <Button variant="outline" onClick={resetConditions}>
+              Reset All
+            </Button>
           </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {currencies.map(currency => (
+              <div key={currency} className="space-y-2">
+                <label className="text-sm font-medium">{currency}</label>
+                <Select
+                  value={currencyConditions[currency as keyof CurrencyConditions] || undefined}
+                  onValueChange={(value: MarketCondition) =>
+                    updateCurrencyCondition(currency as keyof CurrencyConditions, value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select the orderflow" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bullish">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                        Bullish
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="bearish">
+                      <div className="flex items-center gap-2">
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                        Bearish
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="consolidation">
+                      <div className="flex items-center gap-2">
+                        <Minus className="h-4 w-4 text-yellow-500" />
+                        Consolidation
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-center">
+            <Button onClick={handleAnalyze} size="lg" className="px-8">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analyze Pairs
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Feature Preview Card */}
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-xl max-w-md mx-auto">
+      {/* Results */}
+      {hasAnalyzed && (
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Tradable Pairs */}
+          <Card>
             <CardHeader>
-              <CardTitle className="text-lg">What's Coming</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-green-600">
+                <TrendingUp className="h-5 w-5" />
+                Tradable Pairs ({tradablePairs.length})
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>Real-time forex pair analysis</span>
+            <CardContent>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {tradablePairs.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    No tradable pairs with current conditions
+                  </p>
+                ) : (
+                  tradablePairs.map(pair => (
+                    <div key={pair.pair} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium">{pair.pair}</span>
+                      </div>
+                      <Badge className={pair.direction === 'bullish' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                        {pair.direction === 'bullish' ? (
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3 mr-1" />
+                        )}
+                        {pair.direction}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Market condition indicators</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span>Tradable asset recommendations</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <span>Advanced filtering options</span>
+            </CardContent>
+          </Card>
+
+          {/* Non-Tradable Pairs */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-600">
+                <Minus className="h-5 w-5" />
+                Non-Tradable Pairs ({nonTradablePairs.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {nonTradablePairs.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    All pairs are tradable with current conditions
+                  </p>
+                ) : (
+                  nonTradablePairs.map(pair => (
+                    <div key={pair.pair} className="flex items-center justify-between p-3 border rounded-lg opacity-60">
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium">{pair.pair}</span>
+                      </div>
+                      <Badge variant="secondary">
+                        <Minus className="h-3 w-3 mr-1" />
+                        No Trade
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
+      )}
 
-        {/* Contact Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Have Questions? Contact Me</h3>
-          <div className="flex items-center justify-center gap-4">
-            <a
-              href="https://www.instagram.com/yussefousf/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg text-sm"
-            >
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+      {/* Professional Trading Guidelines */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <svg className="h-5 w-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            IMPORTANT: Professional Trading Guidelines
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">
+            <strong>DISCLAIMER:</strong> This tool provides market analysis only. Trading involves substantial risk of loss. Use at your own discretion.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Critical Warning */}
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-              <span className="font-medium">Instagram</span>
-            </a>
-
-            <a
-              href="https://x.com/TraderHafssi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg text-sm"
-            >
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-              <span className="font-medium">Twitter/X</span>
-            </a>
+              <div>
+                <h4 className="font-bold text-red-700 dark:text-red-300">NEVER Use This as a Standalone Strategy</h4>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-1">
+                  This analysis is a <strong>supporting tool only</strong>. Always combine with comprehensive market analysis, proper risk management, and your trading plan.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Animated Elements */}
-        <div className="flex justify-center space-x-2 mt-8">
-          <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
-          <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-        </div>
-      </div>
+          {/* Professional Guidelines */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">
+              Essential Trading Principles
+            </h3>
+
+            <div className="space-y-4">
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">1. Market Confirmation Required</h4>
+                <p className="text-sm text-muted-foreground">
+                  Only execute trades when multiple timeframes and technical indicators confirm the directional bias. Look for confluence with support/resistance levels, trend analysis, and volume confirmation.
+                </p>
+              </div>
+
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">2. Risk Management is Non-Negotiable</h4>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Never risk more than 1-2% of your account per trade.</strong> Set stop-losses before entering positions and maintain strict position sizing rules regardless of signal strength.
+                </p>
+              </div>
+
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">3. Session Timing Matters</h4>
+                <p className="text-sm text-muted-foreground">
+                  Avoid trading during low-volatility periods (Asian session overlaps, major holidays). Focus on London and New York session openings for optimal liquidity and price movement.
+                </p>
+              </div>
+
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">4. Fundamental Analysis Integration</h4>
+                <p className="text-sm text-muted-foreground">
+                  Monitor economic calendars, central bank communications, and geopolitical events. Currency strength analysis should align with fundamental drivers and market sentiment.
+                </p>
+              </div>
+
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">5. Continuous Strategy Refinement</h4>
+                <p className="text-sm text-muted-foreground">
+                  Backtest this analysis method with your trading style. Keep detailed trade journals and regularly review performance to identify optimal market conditions for this approach.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Warning */}
+          <div className="p-4 bg-muted rounded-lg">
+            <p className="text-sm text-center">
+              <strong>Remember:</strong> Professional traders use multiple confirmation signals. This tool should represent only one component of your comprehensive trading strategy.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
-
-
 
 export default ForexTradableAssetsPage;

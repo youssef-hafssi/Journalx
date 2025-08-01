@@ -36,7 +36,11 @@ export default defineConfig(({ mode }) => ({
       name: 'spa-fallback',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (req.url && !req.url.startsWith('/api') && !req.url.includes('.') && req.method === 'GET') {
+          if (req.url &&
+              !req.url.startsWith('/api') &&
+              !req.url.startsWith('/@') && // Exclude Vite internal routes
+              !req.url.includes('.') &&
+              req.method === 'GET') {
             req.url = '/';
           }
           next();

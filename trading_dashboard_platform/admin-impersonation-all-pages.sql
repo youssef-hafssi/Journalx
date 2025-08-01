@@ -1,6 +1,17 @@
 -- Admin Impersonation Support for All Pages
 -- Run this SQL in your Supabase SQL Editor to add impersonation support for all pages
 
+-- Drop existing functions first to avoid return type conflicts
+DROP FUNCTION IF EXISTS get_user_trades_for_admin(UUID);
+DROP FUNCTION IF EXISTS get_user_trade_by_id_for_admin(UUID, UUID);
+DROP FUNCTION IF EXISTS get_user_edge_configs_for_admin(UUID);
+DROP FUNCTION IF EXISTS get_user_news_preferences_for_admin(UUID);
+DROP FUNCTION IF EXISTS get_user_forex_watchlist_for_admin(UUID);
+DROP FUNCTION IF EXISTS get_user_trading_stats_for_admin(UUID);
+DROP FUNCTION IF EXISTS get_user_dashboard_data_for_admin(UUID);
+DROP FUNCTION IF EXISTS get_user_journal_entries_for_admin(UUID);
+DROP FUNCTION IF EXISTS get_user_journal_entry_by_id_for_admin(UUID, UUID);
+
 -- Function to get user trades for impersonation (admin only) - for Calendar, Statistical Edge, Edge Builder
 CREATE OR REPLACE FUNCTION get_user_trades_for_admin(target_user_id UUID)
 RETURNS TABLE (
@@ -350,7 +361,12 @@ RETURNS TABLE (
     user_id UUID,
     title TEXT,
     content TEXT,
+    type TEXT,
     trade_id UUID,
+    recap TEXT,
+    screenshots TEXT[],
+    thumbnail TEXT,
+    images TEXT[],
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ
 )
@@ -367,14 +383,19 @@ BEGIN
         RAISE EXCEPTION 'Unauthorized: Admin access required';
     END IF;
 
-    -- Return user journal entries (only columns that exist)
+    -- Return user journal entries (all columns that exist in the table)
     RETURN QUERY
     SELECT
         je.id,
         je.user_id,
         je.title,
         je.content,
+        je.type,
         je.trade_id,
+        je.recap,
+        je.screenshots,
+        je.thumbnail,
+        je.images,
         je.created_at,
         je.updated_at
     FROM public.journal_entries je

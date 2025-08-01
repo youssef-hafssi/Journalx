@@ -132,6 +132,28 @@ export interface Database {
           updated_at?: string
         }
       }
+      user_announcements: {
+        Row: {
+          id: string
+          user_id: string
+          announcement_id: string
+          seen_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          announcement_id: string
+          seen_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          announcement_id?: string
+          seen_at?: string
+        }
+      }
     }
   }
 }
